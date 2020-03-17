@@ -36,7 +36,7 @@ public class ResolveTakenPictureAsyncTask extends AsyncTask<Void, Void, Writable
     private PictureSavedDelegate mPictureSavedDelegate;
     private Size mViewFinderSize;
 
-    public ResolveTakenPictureAsyncTask(byte[] imageData, Promise promise, ReadableMap options, File cacheDirectory, PictureSavedDelegate delegate, Size viewFinderSize) {
+    public ResolveTakenPictureAsyncTask(byte[] imageData, Promise promise, ReadableMap options, File cacheDirectory, int deviceOrientation, PictureSavedDelegate delegate, Size viewFinderSize) {
         mPromise = promise;
         mOptions = options;
         mImageData = imageData;
