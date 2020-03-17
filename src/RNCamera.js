@@ -107,6 +107,7 @@ type PictureOptions = {
   width?: number,
   fixOrientation?: boolean,
   forceUpOrientation?: boolean,
+  cropToPreview?: boolean,
   pauseAfterCapture?: boolean,
 };
 
@@ -518,6 +519,10 @@ export default class Camera extends React.Component<PropsType, StateType> {
       }
     }
 
+    if (options.cropToPreview === undefined) {
+      options.cropToPreview = Platform.select({ android: false, ios: true });
+    }
+    
     if (options.pauseAfterCapture === undefined) {
       options.pauseAfterCapture = false;
     }

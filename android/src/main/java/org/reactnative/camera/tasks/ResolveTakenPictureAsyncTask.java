@@ -17,6 +17,7 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.bridge.WritableMap;
+import com.google.android.cameraview.Size;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,14 +34,16 @@ public class ResolveTakenPictureAsyncTask extends AsyncTask<Void, Void, Writable
     private File mCacheDirectory;
     private int mDeviceOrientation;
     private PictureSavedDelegate mPictureSavedDelegate;
+    private Size mViewFinderSize;
 
-    public ResolveTakenPictureAsyncTask(byte[] imageData, Promise promise, ReadableMap options, File cacheDirectory, int deviceOrientation, PictureSavedDelegate delegate) {
+    public ResolveTakenPictureAsyncTask(byte[] imageData, Promise promise, ReadableMap options, File cacheDirectory, PictureSavedDelegate delegate, Size viewFinderSize) {
         mPromise = promise;
         mOptions = options;
         mImageData = imageData;
         mCacheDirectory = cacheDirectory;
         mDeviceOrientation = deviceOrientation;
         mPictureSavedDelegate = delegate;
+        mViewFinderSize = viewFinderSize;
     }
 
     private int getQuality() {
@@ -151,6 +154,10 @@ public class ResolveTakenPictureAsyncTask extends AsyncTask<Void, Void, Writable
                     if(orientationChanged){
                         exifData.putInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
                     }
+                }
+
+                if (mOptions.hasKey("cropToPreview") && mOptions.getBoolean("cropToPreview")) {
+                    mBitmap = cropToPreview(mBitmap, mViewFinderSize);
                 }
 
                 // Write Exif data to the response if requested
@@ -291,6 +298,13 @@ public class ResolveTakenPictureAsyncTask extends AsyncTask<Void, Void, Writable
         Matrix matrix = new Matrix();
         matrix.preScale(-1.0f, 1.0f);
         return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
+    }
+
+    private Bitmap cropToPreview(Bitmap source, Size viewFinderSize) {
+        float ratio = (float) source.getWidth() / viewFinderSize.getWidth();
+        int width = (int) Math.round(viewFinderSize.getWidth() * ratio);
+        int height = (int) Math.round(viewFinderSize.getHeight() * ratio);
+        return Bitmap.createBitmap(source, 0, 0, width, height);
     }
 
     // Get rotation degrees from Exif orientation enum
