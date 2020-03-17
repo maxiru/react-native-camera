@@ -60,11 +60,16 @@
 {
     __weak __typeof(self) weakSelf = self;
     self.orientationCallback = ^(UIInterfaceOrientation orientation) {
-        if (callback) {
-            callback(orientation);
+        // Synchronized because this might fire more than once
+        // under some circumstances, causing a very bad loop
+        // to people that uses it.
+        @synchronized (weakSelf) {
+            if (callback && weakSelf.orientationCallback) {
+                callback(orientation);
+            }
+            weakSelf.orientationCallback = nil;
+            [weakSelf pause];
         }
-        weakSelf.orientationCallback = nil;
-        [weakSelf pause];
     };
     [self resume];
 }
@@ -83,7 +88,11 @@
     if(acceleration.y >= 0.75) {
         return UIInterfaceOrientationPortraitUpsideDown;
     }
-    return [[UIApplication sharedApplication] statusBarOrientation];
+    __block UIInterfaceOrientation orientation;
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        orientation = [[UIApplication sharedApplication] statusBarOrientation];
+    });
+    return orientation;
 }
 
 - (AVCaptureVideoOrientation)convertToAVCaptureVideoOrientation:(UIInterfaceOrientation)orientation
